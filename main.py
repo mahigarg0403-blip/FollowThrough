@@ -112,5 +112,24 @@ async def handler(n):
             S.seen.add(m["id"])
         await check_timeout(n)
 
+async def serve_health():
+    port = int(os.getenv("PORT", "10000"))
+
+    async def handle(reader, writer):
+        try:
+            await reader.read(1024)
+            writer.write(b"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 2\r\n\r\nok")
+            await writer.drain()
+        finally:
+            writer.close()
+
+    return await asyncio.start_server(handle, "0.0.0.0", port)
+
+async def main():
+    server = None
+    if os.getenv("PORT"):          # Render sets PORT for web services
+        server = await serve_health()
+    await run_forever(handler)
+
 if __name__ == "__main__":
-    asyncio.run(run_forever(handler))
+    asyncio.run(main())
