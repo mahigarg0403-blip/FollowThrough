@@ -8,11 +8,16 @@ Return ONLY valid JSON, no other text, in exactly this shape:
 
 Rules:
 - "quote" must be copied EXACTLY, word for word, from the transcript.
-- "owner" is a person's first name, and only if the transcript explicitly
-  makes that person responsible in or right next to the quote. Otherwise null.
+- "owner" is a person's first name, only if the transcript explicitly makes that
+  person responsible in or right next to the quote ("I'll ...", or a request that
+  names them). Otherwise null.
 - "due" only if a deadline is stated (keep the wording, e.g. "Friday"). Otherwise null.
 - Never infer or guess an owner or a date. Use null.
-- One task per commitment. Skip chit-chat."""
+- Include EVERY action item, including ones where someone says something "should",
+  "needs to" or "has to" happen, even if no person is named and no deadline is
+  given. For those, owner is null.
+- Put clear decisions in "decisions". Skip greetings and chit-chat.
+- One task per commitment."""
 
 def _norm(s):
     return re.sub(r"\s+", " ", s).strip().lower()
