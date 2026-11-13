@@ -1,0 +1,74 @@
+[
+  {
+    "id": "demo-meeting-t1",
+    "title": "Send pricing deck",
+    "owner": "priya",
+    "due": "Friday",
+    "quote": "I'll send the pricing deck to the client by Friday.",
+    "status": "confirmed",
+    "meeting_id": "demo-meeting"
+  },
+  {
+    "id": "demo-meeting-t2",
+    "title": "Finish client deck",
+    "owner": "priya",
+    "due": "Monday",
+    "quote": "I'll finish the client deck by Monday.",
+    "status": "confirmed",
+    "meeting_id": "demo-meeting"
+  },
+  {
+    "id": "demo-meeting-t3",
+    "title": "Prepare budget sheet",
+    "owner": "priya",
+    "due": "Wednesday",
+    "quote": "I'll have the budget sheet ready by Wednesday.",
+    "status": "confirmed",
+    "meeting_id": "demo-meeting"
+  },
+  {
+    "id": "demo-meeting-t4",
+    "title": "Fix signup bug",
+    "owner": "arjun",
+    "due": "Thursday",
+    "quote": "I'll fix the signup bug by Thursday.",
+    "status": "confirmed",
+    "meeting_id": "demo-meeting"
+  },
+  {
+    "id": "demo-meeting-t5",
+    "title": "Update landing page",
+    "owner": "arjun",
+    "due": null,
+    "quote": "We should update the landing page.",
+    "status": "confirmed",
+    "meeting_id": "demo-meeting"
+  },
+  {
+    "id": "demo-meeting-t6",
+    "title": "Write onboarding email",
+    "owner": "mei",
+    "due": "Tuesday",
+    "quote": "I'll write the onboarding email by Tuesday.",
+    "status": "confirmed",
+    "meeting_id": "demo-meeting"
+  },
+  {
+    "id": "demo-meeting-t7",
+    "title": "Book demo room",
+    "owner": "mei",
+    "due": "next Wednesday",
+    "quote": "I'll book the demo room for next Wednesday.",
+    "status": "confirmed",
+    "meeting_id": "demo-meeting"
+  },
+  {
+    "id": "demo-meeting-t8",
+    "title": "Follow up with client about contract",
+    "owner": null,
+    "due": null,
+    "quote": "Someone needs to follow up with the client about the contract.",
+    "status": "unassigned",
+    "meeting_id": "demo-meeting"
+  }
+]

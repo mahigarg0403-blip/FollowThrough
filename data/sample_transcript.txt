@@ -1,0 +1,12 @@
+Q4 Pricing Sync
+
+Mahi: Okay, let's get through this. First decision: We're going with three pricing tiers and no custom plans at launch.
+Priya: Agreed. I'll send the pricing deck to the client by Friday.
+Priya: I'll finish the client deck by Monday.
+Priya: I'll have the budget sheet ready by Wednesday.
+Arjun: I'll fix the signup bug by Thursday.
+Mei: I'll write the onboarding email by Tuesday.
+Mei: I'll book the demo room for next Wednesday.
+Mahi: We should update the landing page.
+Mahi: Someone needs to follow up with the client about the contract.
+Mahi: Great, that's everything. Thanks all.

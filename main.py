@@ -1,17 +1,25 @@
-import asyncio, hashlib, json, os, time
+import asyncio, hashlib, json, os, re, time
 import httpx
 from src.agent.nonilion import run_forever, BOT_NAME
 from src.agent.extract import extract_tasks
 from src.agent.ask import format_results, question_text, parse_answers
 from src.agent.store_shim import save_tasks, update_task
+from src import store
+from src.outputs.export import export_csv, export_minutes
+from src.chase import chase
+from src.outputs import chart
+from src.agent.commands import route
 
 ASK_TIMEOUT = int(os.getenv("ASK_TIMEOUT", "30"))
 TRANSCRIPT_EXT = (".txt", ".md")
+CHASE_REPLY = re.compile(r"^\s*([A-Za-z]+)\s*:\s*(.+)$")   # "priya: done"
 
 class State:
     seen = set()
     started = False
     pending = None      # {"tasks": [...], "deadline": float}
+    meeting_id = None   # current meeting: outputs only cover this one
+    decisions = []
 
 S = State()
 
@@ -38,7 +46,13 @@ async def on_transcript(n, msg, text):
     meeting_id = f"m{int(time.time())}"
     await n.post("Got the transcript. Reading it now...", reply_to=msg["id"])
     decisions, tasks = await asyncio.to_thread(extract_cached, text, meeting_id)
+    # fresh demo state: a new transcript replaces older tasks, so the chart,
+    # Q&A and reminders only ever see this meeting
+    p = store.store_path()
+    if p.exists():
+        p.unlink()
     save_tasks(meeting_id, tasks)
+    S.meeting_id, S.decisions = meeting_id, decisions
     await n.post(format_results(decisions, tasks))
     missing = [t for t in tasks if not t["owner"]]
     if missing:
@@ -72,11 +86,34 @@ async def check_timeout(n):
                      + "\n".join(f"• {t['title']}" for t in left))
         S.pending = None
 
+async def on_chase_reply(n, msg):
+    """'priya: done' or a plain 'done' from the owner. No @mention needed."""
+    text = msg.get("text", "") or ""
+    m = CHASE_REPLY.match(text)
+    who, body = (m.group(1), m.group(2)) if m else (msg.get("from"), text)
+    line = chase.handle_reply(who, body)
+    if not line:
+        return False
+    await n.post(f"Marked done. Progress: {line}\n```\n{chart.chart_text(S.meeting_id)}\n```",
+                 reply_to=msg["id"])
+    return True
+
 async def on_command(n, msg):
-    # TODO (A, later): wire B's functions here, one branch each:
-    #   "csv"/"minutes" -> n.post(file={...}) ; "chart" -> n.post(media_urls=[...])
-    #   "open for <name>" -> answer_question ; "remind" -> run_reminders
-    await n.post("Drop a .txt transcript in this chat and I'll pull out the tasks.",
+    text = msg.get("text", "") or ""
+    low = text.lower()
+    mid = S.meeting_id
+    try:
+        if "csv" in low:
+            await n.post("Here is the CSV.", reply_to=msg["id"], file=export_csv(mid))
+            return
+        if "minutes" in low:
+            await n.post("Here are the minutes.", reply_to=msg["id"],
+                         file=export_minutes(mid, S.decisions))
+            return
+    except Exception:
+        import traceback; traceback.print_exc()   # file upload failed: fall through to text
+    reply = route(text, msg.get("from"), mid, S.decisions)
+    await n.post(reply or "Drop a .txt transcript in this chat and I'll pull out the tasks.",
                  reply_to=msg["id"])
 
 async def process(n, msg):
@@ -86,6 +123,8 @@ async def process(n, msg):
         if m.get("kind") == "file" and m["name"].lower().endswith(TRANSCRIPT_EXT):
             return await on_transcript(n, msg, await fetch_text(m["url"]))
     if S.pending and await answer_pending(n, msg):
+        return
+    if await on_chase_reply(n, msg):
         return
     if msg.get("mentionsYou"):
         await on_command(n, msg)
