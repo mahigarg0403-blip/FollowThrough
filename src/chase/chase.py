@@ -1,4 +1,4 @@
-"""Chase: build reminder DMs and handle 'done' replies. Returns data only; never sends."""
+"""Chase: build reminders, deliver them (DM first, channel fallback), handle 'done' replies."""
 import json
 import re
 from datetime import date
@@ -9,6 +9,10 @@ from ..outputs import chart
 _DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
 _DONE = re.compile(r"\b(done|finished|completed?|did it|sent it|shipped)\b", re.I)
 _NEG = re.compile(r"\b(not|isn't|haven't|hasn't|never|almost|nearly|not yet)\b|n't\b", re.I)
+
+# owner (lowercase) -> Nonilion user id. Fill in for real members; anyone missing is
+# treated like a guest and gets the channel fallback instead of a DM.
+USER_IDS = {}  # e.g. {"priya": "u_123", "arjun": "u_456", "mei": "u_789"}
 
 
 def _state_path():
@@ -55,7 +59,8 @@ def due_reminders(demo=False, owner=None, today=None) -> list:
     seen_owner, out, state = set(), [], _load_state()
     for t in store.load_tasks():
         who = t.get("owner")
-        if not who or t["status"] != "confirmed":
+        # Any owned, not-yet-done task counts (covers owners assigned via the grouped question).
+        if not who or t["status"] in ("done", "unassigned", "needs_owner"):
             continue
         if owner and who != owner.strip().lower():
             continue
@@ -78,6 +83,43 @@ def due_reminders(demo=False, owner=None, today=None) -> list:
     return out
 
 
+def _dm_failed(res):
+    """Placeholder: adjust to whatever A's send_dm returns on failure."""
+    return res is False or (isinstance(res, dict) and (res.get("error") or res.get("ok") is False))
+
+
+def deliver(reminders, send_dm, post) -> str:
+    """Send each reminder by DM; if that fails (guest, no account, API error), @mention
+    the owner in the channel instead. Returns a one-line summary and never raises."""
+    dm, channel = [], []
+    for r in reminders:
+        who, text = r["to"], r["text"]
+        try:
+            uid = USER_IDS.get(who)
+            if USER_IDS and not uid:
+                raise RuntimeError("no Nonilion account mapped")
+            res = send_dm(uid or who, text)
+            if _dm_failed(res):
+                raise RuntimeError(res)
+            dm.append(who)
+        except Exception:
+            post(f"@{who} {text}")
+            channel.append(who)
+    if not reminders:
+        return "No reminders due right now."
+    parts = []
+    if dm:
+        parts.append(f"DM'd {', '.join(dm)}")
+    if channel:
+        parts.append(f"couldn't DM {', '.join(channel)} (guest or no account), so I mentioned them here")
+    return "Reminders: " + "; ".join(parts) + "."
+
+
+def run_reminders(send_dm, post, demo=False, owner=None):
+    """One call for the chat command: build, deliver, post the summary."""
+    post(deliver(due_reminders(demo=demo, owner=owner), send_dm, post))
+
+
 def progress_line(meeting_id=None) -> str:
     tasks = store.load_tasks(meeting_id)
     done = sum(t["status"] == "done" for t in tasks)
@@ -86,12 +128,15 @@ def progress_line(meeting_id=None) -> str:
 
 
 def handle_reply(user, text):
-    """If `user` says they're done, mark their task done and return the progress line.
-    Returns None for anything else (A should then ignore the message)."""
+    """If `user` says they're done (in a DM or in the channel), mark their task done and
+    return the progress line. Returns None for anything else (A should ignore it)."""
     if not text or not _DONE.search(text) or _NEG.search(text):
         return None
     who = str(user or "").strip().lower()
     names = {t["owner"] for t in store.load_tasks() if t.get("owner")}
+    if who not in names:
+        # also try reverse lookup from a Nonilion user id
+        who = next((n for n, uid in USER_IDS.items() if uid == who), who)
     if who not in names:
         who = next((p for p in re.split(r"\W+", who) if p in names), None)
     if not who:
@@ -103,3 +148,8 @@ def handle_reply(user, text):
     target = next((t for t in mine if t["id"] == state.get(who)), mine[0])
     store.update_task(target["id"], status="done")
     return progress_line()
+
+
+def refresh_chart():
+    """Path to a fresh workload chart PNG; A posts it right after the progress line."""
+    return chart.make_chart()

@@ -1,0 +1,2272 @@
+[
+  {
+    "name": "whoami",
+    "description": "Describe you as a Nonilion office character: your name, the room you are in, who you work for, where you are standing and what you can do.",
+    "schema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_map",
+    "description": "The room's map: size, coordinate system (origin at the centre, x grows right, y grows down, 1 unit = 1 pixel), named places, spawn points, doors and every wall as [x1, y1, x2, y2] line segments. Walls block walking; walk_to already routes around them.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "include_walls": {
+          "type": "boolean",
+          "description": "Include the wall segments (default true)."
+        },
+        "max_walls": {
+          "type": "number",
+          "description": "Cap on wall segments returned (default 600)."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_places",
+    "description": "Named places on this map (rooms, open areas, zones, desks, seats, interactables\u2026) with their coordinates and footprints. Walk to one with walk_to { place } \u2014 names match fuzzily (\"office\" finds \"Office\").",
+    "schema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "where_am_i",
+    "description": "Your current position on the map, and the nearest named place.",
+    "schema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "check_spot",
+    "description": "Whether a coordinate is open floor you can stand on, and the nearest open spot if it is not.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "walk_to",
+    "description": "Walk your character to a spot. Give either x and y, a named place, a person in the room, or target \"owner\" (the person you are talking with) or \"spawn\". The route goes around walls; blocked targets move to the nearest open spot. Everyone in the room sees you walk there right away.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "place": {
+          "type": "string",
+          "description": "A named place from list_places."
+        },
+        "person": {
+          "type": "string",
+          "description": "Walk up to this person (a name from look_around)."
+        },
+        "target": {
+          "type": "string",
+          "enum": [
+            "owner",
+            "spawn"
+          ],
+          "description": "Walk to the person you are chatting with, or back to spawn."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "say_out_loud",
+    "description": "Speak out loud in the office. People near your character hear it in your voice and see a speech bubble over you. Keep it short and conversational.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "What to say (one or two sentences)."
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_my_rooms",
+    "description": "The Nonilion rooms (offices) you own or belong to. Your avatar can enter any of them with enter_room.",
+    "schema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_characters",
+    "description": "The character looks your avatar can wear. Pass one to enter_room or set_appearance.",
+    "schema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "enter_room",
+    "description": "Bring your avatar into a Nonilion room so people see you as a character there. You can then walk, talk, emote, listen and follow people. Calling it again for another room moves you there.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "room": {
+          "type": "string",
+          "description": "Room name from list_my_rooms. Defaults to the room chosen when you connected."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name shown over your avatar."
+        },
+        "character": {
+          "type": "string",
+          "description": "A look from list_characters."
+        },
+        "voice": {
+          "type": "string",
+          "description": "Voice name for speech, e.g. af_bella or a browser voice name."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "leave_room",
+    "description": "Take your avatar out of the room. People see you leave.",
+    "schema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "set_appearance",
+    "description": "Change the name over your avatar, its character look, or the voice it speaks with.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "character": {
+          "type": "string",
+          "description": "A look from list_characters."
+        },
+        "voice": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "look_around",
+    "description": "Who and what is around you right now: people in the room with where they stand and how far away they are, AI coworkers, and the nearest named places.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "radius": {
+          "type": "number",
+          "description": "Only list things within this many pixels (default: everything)."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "follow_person",
+    "description": "Walk alongside a person and keep following them as they move, like a coworker walking with them. Stops after the given minutes or when you call stop_moving or walk_to.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "person": {
+          "type": "string",
+          "description": "Their name, from look_around."
+        },
+        "minutes": {
+          "type": "number",
+          "description": "How long to follow (default 5, max 30)."
+        }
+      },
+      "required": [
+        "person"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "stop_moving",
+    "description": "Stop walking or following and stand still where you are now.",
+    "schema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "emote",
+    "description": "Show a reaction over your avatar for a few seconds, like a person waving or nodding. One of: wave, thumbs_up, clap, laugh, smile, heart, think, surprised, celebrate, shrug, idea, coffee, sad, fire, eyes, ok, raise_hand, nod.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "emote": {
+          "type": "string",
+          "enum": [
+            "wave",
+            "thumbs_up",
+            "clap",
+            "laugh",
+            "smile",
+            "heart",
+            "think",
+            "surprised",
+            "celebrate",
+            "shrug",
+            "idea",
+            "coffee",
+            "sad",
+            "fire",
+            "eyes",
+            "ok",
+            "raise_hand",
+            "nod"
+          ]
+        },
+        "seconds": {
+          "type": "number",
+          "description": "How long to show it (default 3, max 10)."
+        }
+      },
+      "required": [
+        "emote"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "set_status",
+    "description": "Show a short status under your name, like \"thinking\u2026\", \"on a call\" or \"writing the report\". Pass an empty status to clear it.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "description": "Up to 60 characters."
+        },
+        "minutes": {
+          "type": "number",
+          "description": "How long to show it (default 10, max 240)."
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "listen",
+    "description": "Wait for something to happen around you and get it: people talking to you or speaking near you, chat messages (mentions flagged), people walking up to you or leaving, and people joining or leaving the room. Returns as soon as anything happens, or after wait_seconds. Call it in a loop to stay present like a person in the office.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "wait_seconds": {
+          "type": "number",
+          "description": "How long to wait for something (0-25, default 20)."
+        },
+        "include_room_chat": {
+          "type": "boolean",
+          "description": "Include every room chat message, not just ones meant for you (default true)."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "reply",
+    "description": "Answer a message someone sent you (a \"message\" event from listen). The reply appears in your conversation with them, and with speak=true you also say it out loud in the room.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "speak": {
+          "type": "boolean",
+          "description": "Also say it out loud (default true)."
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "join_voice",
+    "description": "Get a LiveKit connection for your avatar so a realtime voice agent can speak in its own voice and hear people's microphones. Connect with any LiveKit SDK or LiveKit Agents (url + token) and publish one microphone track. People hear you from where your avatar stands, louder as they get closer. Tokens last 6 hours.",
+    "schema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_people",
+    "description": "People online in this room right now, plus the room's host and members.",
+    "schema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_coworkers",
+    "description": "The AI agents working in this room, what each does and what they are doing now.",
+    "schema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_chat_handles",
+    "description": "Everyone you can tag in the office chat: people (with their @handle and whether they are online) and AI agents.",
+    "schema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "read_room_chat",
+    "description": "The latest messages in the room's text chat, oldest first, with message ids, who was tagged, shared media and whether a message mentions you.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "number",
+          "description": "How many messages (default 20, max 50)."
+        },
+        "only_mentions": {
+          "type": "boolean",
+          "description": "Only messages that tag you or everyone."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "post_room_chat",
+    "description": "Post a message in the room's text chat as yourself. You can tag people or agents (they get notified), reply to a message, and share images, videos, audio or files. Everyone in the room sees it.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "The message. You can also write @handles inline."
+        },
+        "mention": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "People or agents to tag (names or @handles from list_chat_handles). Use \"everyone\" to notify the whole room. Tagged people get a notification."
+        },
+        "reply_to": {
+          "type": "string",
+          "description": "Id of the message you are replying to, from read_room_chat."
+        },
+        "media_urls": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Links to images, videos, audio or files to share (up to 6). They are copied into Nonilion so they keep working."
+        },
+        "file": {
+          "type": "object",
+          "description": "Create and share a file from text you wrote, such as a report, notes or CSV.",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "File name with extension, e.g. summary.md or leads.csv."
+            },
+            "content": {
+              "type": "string"
+            },
+            "mime": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "content"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "send_direct_message",
+    "description": "Send a private message to one person who is in the office right now. It lands in their Direct chats. You can share media and files too.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "to": {
+          "type": "string",
+          "description": "The person's name or @handle."
+        },
+        "text": {
+          "type": "string"
+        },
+        "media_urls": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Links to images, videos, audio or files to share (up to 6). They are copied into Nonilion so they keep working."
+        },
+        "file": {
+          "type": "object",
+          "description": "Create and share a file from text you wrote, such as a report, notes or CSV.",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "File name with extension, e.g. summary.md or leads.csv."
+            },
+            "content": {
+              "type": "string"
+            },
+            "mime": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "content"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "to"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_chat_channels",
+    "description": "The room's chat channels (#announcements and so on) and whether you can post top-level messages in each.",
+    "schema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "read_chat_channel",
+    "description": "Recent messages in a channel, or the replies in one thread.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "channel": {
+          "type": "string",
+          "description": "Channel name, e.g. general or #general."
+        },
+        "limit": {
+          "type": "number",
+          "description": "How many messages (default 20, max 50)."
+        },
+        "thread_of": {
+          "type": "string",
+          "description": "Message id to read that thread's replies instead."
+        }
+      },
+      "required": [
+        "channel"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "post_chat_channel",
+    "description": "Post in one of the room's channels, or reply in a thread. You can tag people and share media and files.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "channel": {
+          "type": "string",
+          "description": "Channel name, e.g. general."
+        },
+        "text": {
+          "type": "string"
+        },
+        "mention": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "People or agents to tag (names or @handles from list_chat_handles). Use \"everyone\" to notify the whole room. Tagged people get a notification."
+        },
+        "thread_of": {
+          "type": "string",
+          "description": "Message id to reply in its thread."
+        },
+        "media_urls": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Links to images, videos, audio or files to share (up to 6). They are copied into Nonilion so they keep working."
+        },
+        "file": {
+          "type": "object",
+          "description": "Create and share a file from text you wrote, such as a report, notes or CSV.",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "File name with extension, e.g. summary.md or leads.csv."
+            },
+            "content": {
+              "type": "string"
+            },
+            "mime": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "content"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "channel"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_chat_groups",
+    "description": "The private chat groups in this room that your owner belongs to, so you can read and post in them.",
+    "schema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "read_chat_group",
+    "description": "Recent messages in a chat group your owner belongs to.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "group": {
+          "type": "string",
+          "description": "Group name."
+        },
+        "limit": {
+          "type": "number",
+          "description": "How many messages (default 20, max 50)."
+        }
+      },
+      "required": [
+        "group"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "post_chat_group",
+    "description": "Post in a chat group your owner belongs to. You can tag people and share media and files.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "group": {
+          "type": "string",
+          "description": "Group name."
+        },
+        "text": {
+          "type": "string"
+        },
+        "mention": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "People or agents to tag (names or @handles from list_chat_handles). Use \"everyone\" to notify the whole room. Tagged people get a notification."
+        },
+        "media_urls": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Links to images, videos, audio or files to share (up to 6). They are copied into Nonilion so they keep working."
+        },
+        "file": {
+          "type": "object",
+          "description": "Create and share a file from text you wrote, such as a report, notes or CSV.",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "File name with extension, e.g. summary.md or leads.csv."
+            },
+            "content": {
+              "type": "string"
+            },
+            "mime": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "content"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "group"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "kb_search",
+    "description": "kb.search: search this room's Workspace Knowledge Base (notes, policies, FAQs, docs, uploads). Returns the most relevant snippets numbered [KB1], [KB2]\u2026 with titles. Use it before answering anything about this team's own facts, prices, policies, plans or past decisions.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "What to look for, in a few words."
+        },
+        "k": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "description": "How many snippets (default 3)."
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "kb_add_note",
+    "description": "kb.add_note: save a note to this room's Workspace Knowledge Base so every agent and person can use it later. Use it when someone asks you to remember/save/document something for the team, or when you produce a durable fact or decision. Never save secrets, passwords or keys.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Short title (under 80 characters)."
+        },
+        "content": {
+          "type": "string",
+          "description": "The note itself (plain text or markdown, under 4000 characters)."
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Optional tags."
+        }
+      },
+      "required": [
+        "title",
+        "content"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "search_knowledge_base",
+    "description": "Search the room's knowledge base (documents, notes and facts the team saved) for anything relevant to a question.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_open_work",
+    "description": "Everything in progress across the office: Nonidex coding tasks, agent runs, drafts waiting for approval, scheduled posts and more.",
+    "schema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "delegate_to_agent",
+    "description": "Ask another AI coworker in this room to do something (for example Social Media Lite for a post draft, Iris for customer support, Convertor for outreach, Blog for an article). Outward actions like publishing or sending still wait for a human to approve. Returns a reference you can check with check_delegated_work.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "agent": {
+          "type": "string",
+          "description": "The coworker's name, from list_coworkers."
+        },
+        "instruction": {
+          "type": "string",
+          "description": "What they should do, with all the detail they need."
+        }
+      },
+      "required": [
+        "agent",
+        "instruction"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "check_delegated_work",
+    "description": "Status and result of work you handed to a coworker, by the reference delegate_to_agent returned.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "ref": {
+          "type": "string",
+          "description": "The agentwork:\u2026 reference."
+        }
+      },
+      "required": [
+        "ref"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_tasks",
+    "description": "Tasks on a room's task board (defaults to your current room), newest first. Filter by status.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "room": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "TODO",
+            "IN_PROGRESS",
+            "REVIEW",
+            "DONE"
+          ]
+        },
+        "limit": {
+          "type": "number",
+          "description": "Default 30, max 100."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "create_task",
+    "description": "Add a task to a room's task board.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "room": {
+          "type": "string"
+        },
+        "priority": {
+          "type": "string",
+          "enum": [
+            "LOW",
+            "MEDIUM",
+            "HIGH"
+          ]
+        },
+        "deadline": {
+          "type": "string",
+          "description": "ISO date or date-time."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "TODO",
+            "IN_PROGRESS",
+            "REVIEW",
+            "DONE"
+          ],
+          "description": "Default TODO."
+        }
+      },
+      "required": [
+        "description"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "update_task",
+    "description": "Change a task's status, progress, priority, description or deadline.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "task_id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "TODO",
+            "IN_PROGRESS",
+            "REVIEW",
+            "DONE"
+          ]
+        },
+        "progress": {
+          "type": "number",
+          "description": "0-100."
+        },
+        "priority": {
+          "type": "string",
+          "enum": [
+            "LOW",
+            "MEDIUM",
+            "HIGH"
+          ]
+        },
+        "description": {
+          "type": "string"
+        },
+        "deadline": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "task_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_meetings",
+    "description": "Your scheduled meetings in Nonilion, upcoming by default.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "scope": {
+          "type": "string",
+          "enum": [
+            "upcoming",
+            "past"
+          ]
+        },
+        "limit": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "schedule_meeting",
+    "description": "Book a meeting in a Nonilion room and email invites. Fails on a clash with your calendar.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "starts_at": {
+          "type": "string",
+          "description": "ISO date-time with timezone offset."
+        },
+        "duration_minutes": {
+          "type": "number",
+          "description": "Default 30."
+        },
+        "invite_emails": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "room": {
+          "type": "string",
+          "description": "One of your rooms; otherwise a fresh meeting room is made."
+        },
+        "timezone": {
+          "type": "string",
+          "description": "IANA timezone for the invite email, e.g. Europe/London."
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "starts_at",
+        "invite_emails"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "add_knowledge",
+    "description": "Save a note or document to a room's Workspace Knowledge Base. Content may be plain text or markdown (the UI renders markdown). Prefer clear readable notes over dumping raw markup. Optional notebookId places the note inside an existing notebook for that room.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        },
+        "room": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "notebookId": {
+          "type": "string",
+          "description": "Optional notebook id in this room."
+        }
+      },
+      "required": [
+        "title",
+        "content"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "create_notebook",
+    "description": "Create a Workspace Knowledge Base notebook in a room. Defaults to shared visibility so everyone in the room can see it.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "room": {
+          "type": "string"
+        },
+        "visibility": {
+          "type": "string",
+          "enum": [
+            "personal",
+            "shared"
+          ],
+          "description": "Default shared."
+        }
+      },
+      "required": [
+        "title"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "delete_knowledge",
+    "description": "Delete a Workspace KB entry by id, or by title + room. Only the note's creator or the room host may delete it.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string",
+          "description": "Used with room when id is omitted."
+        },
+        "room": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "update_knowledge",
+    "description": "Update a Workspace KB entry's title, content, tags, and/or notebook. Same permission rules as delete_knowledge.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "notebookId": {
+          "type": "string",
+          "description": "Notebook id, or \"default\"/empty to clear notebook scope."
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_my_agents",
+    "description": "The AI agents you own across your rooms: what each is, where it works and what it's doing.",
+    "schema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_notifications",
+    "description": "Recent notifications from your agents: finished work, approvals waiting on you and errors.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "unread_only": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_nonicoin_balance",
+    "description": "Your NoniCoin balance (1 NoniCoin = 1\u00a2), which pays for agents, blogs, characters and maps on Nonilion's keys.",
+    "schema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_nonidex_projects",
+    "description": "Your owner's Nonidex (AI coding agent) projects.",
+    "schema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "create_nonidex_project",
+    "description": "Create a new Nonidex project (a cloud workspace) for your owner, e.g. for a dashboard or web app.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "start_nonidex_task",
+    "description": "Give Nonidex, the AI coding agent, a task in one of your owner's projects: build or fix code, a website, a dashboard or web app. Pass live_feeds (ids or names from list_live_feeds) to have it build an app that shows and sends live data with office agents. It works on its own; check it with nonidex_task_status.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "description": "Project name or id from list_nonidex_projects."
+        },
+        "repo": {
+          "type": "string",
+          "description": "Or a GitHub repository (owner/name or its URL). A project is linked for it automatically."
+        },
+        "prompt": {
+          "type": "string",
+          "description": "What to build or fix, in detail."
+        },
+        "live_feeds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Live data feeds the app should read from and send to."
+        }
+      },
+      "required": [
+        "prompt"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_nonidex_tasks",
+    "description": "Your owner's recent Nonidex tasks (optionally in one project) with their status.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string"
+        },
+        "limit": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "nonidex_task_status",
+    "description": "Status, result and anything Nonidex is waiting on (a question or an approval) for a task by id, or your owner's latest few tasks.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "task_id": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "nonidex_github_status",
+    "description": "Whether GitHub is connected for your owner's Nonidex and which projects have a GitHub repository. Check this before promising a pull request: without both, no pull request can be opened.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "open_nonidex_pull_request",
+    "description": "Push a Nonidex task's work to its branch and open the pull request on GitHub. Only works when the task's project has a GitHub repository, GitHub is connected and the task has run (it has a branch). Returns the pull request link.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "task_id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "draft": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "task_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "read_nonidex_task",
+    "description": "What Nonidex did on a task, step by step (requests, edits, commands, questions, approvals, results). Pass after_seq to read only newer steps.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "task_id": {
+          "type": "string"
+        },
+        "after_seq": {
+          "type": "number"
+        },
+        "limit": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "task_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "message_nonidex_task",
+    "description": "Answer Nonidex's question on a task, or give it new instructions or a follow-up. It picks the work back up right away.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "task_id": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "task_id",
+        "text"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "answer_nonidex_approval",
+    "description": "Approve or deny the command Nonidex is waiting to run on a task. Without request_id it answers the request it's waiting on now.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "task_id": {
+          "type": "string"
+        },
+        "approve": {
+          "type": "boolean"
+        },
+        "request_id": {
+          "type": "string"
+        },
+        "remember": {
+          "type": "boolean",
+          "description": "Also allow this same command in future without asking."
+        }
+      },
+      "required": [
+        "task_id",
+        "approve"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "control_nonidex_task",
+    "description": "Pause, resume (also retries a failed task or gives more turns) or cancel a Nonidex task.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "task_id": {
+          "type": "string"
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "pause",
+            "resume",
+            "cancel"
+          ]
+        }
+      },
+      "required": [
+        "task_id",
+        "action"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_nonidex_files",
+    "description": "Files and folders in a Nonidex project (with task_id: including that task's in-progress changes).",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string"
+        },
+        "task_id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string",
+          "description": "Folder, default the project root."
+        }
+      },
+      "required": [
+        "project"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "read_nonidex_file",
+    "description": "Read a file from a Nonidex project (with task_id: as that task left it).",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string"
+        },
+        "task_id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "project",
+        "path"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "nonidex_deployments",
+    "description": "A Nonidex project's deploys: the live (production) URL, preview URLs and domains.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "project"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "deploy_nonidex_project",
+    "description": "Publish a Nonidex project to Vercel (production by default, or a preview), optionally with a task's latest changes.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string"
+        },
+        "task_id": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string",
+          "enum": [
+            "production",
+            "preview"
+          ]
+        }
+      },
+      "required": [
+        "project"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_github_repos",
+    "description": "The GitHub repositories your owner's Nonidex can reach, and which Nonidex project each one is linked to.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "search": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "link_github_repo",
+    "description": "Make a Nonidex project for a GitHub repository (or return the one that exists), so tasks can work in it and open pull requests.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "repo": {
+          "type": "string",
+          "description": "owner/name or the repository link"
+        }
+      },
+      "required": [
+        "repo"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "pull_request_info",
+    "description": "A GitHub pull request's real state: open/merged, branches, whether it has merge conflicts, changed files, failing checks and review comments.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "Pull request link, e.g. https://github.com/owner/repo/pull/12"
+        },
+        "repo": {
+          "type": "string",
+          "description": "owner/name, when no link is given"
+        },
+        "number": {
+          "type": "number",
+          "description": "Pull request number, when no link is given"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "resolve_pull_request_conflicts",
+    "description": "Bring a pull request up to date with its base branch and resolve the merge conflicts for real: clean merges are pushed at once as a merge commit; real conflicts start a Nonidex task that resolves them and pushes the merge commit to the PR branch.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "Pull request link, e.g. https://github.com/owner/repo/pull/12"
+        },
+        "repo": {
+          "type": "string",
+          "description": "owner/name, when no link is given"
+        },
+        "number": {
+          "type": "number",
+          "description": "Pull request number, when no link is given"
+        },
+        "instruction": {
+          "type": "string",
+          "description": "Anything specific about how to resolve them."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "work_on_pull_request",
+    "description": "Start a Nonidex task on an existing pull request's branch: address review comments, fix failing checks, or add the changes asked for. Its commits are pushed to that PR's branch; no new PR is opened.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "Pull request link, e.g. https://github.com/owner/repo/pull/12"
+        },
+        "repo": {
+          "type": "string",
+          "description": "owner/name, when no link is given"
+        },
+        "number": {
+          "type": "number",
+          "description": "Pull request number, when no link is given"
+        },
+        "instruction": {
+          "type": "string",
+          "description": "What to change on the PR."
+        }
+      },
+      "required": [
+        "instruction"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "review_pull_request",
+    "description": "Review a GitHub pull request's diff like a senior engineer (bugs, security, tests, readability) and optionally post the review on GitHub.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "Pull request link, e.g. https://github.com/owner/repo/pull/12"
+        },
+        "repo": {
+          "type": "string",
+          "description": "owner/name, when no link is given"
+        },
+        "number": {
+          "type": "number",
+          "description": "Pull request number, when no link is given"
+        },
+        "focus": {
+          "type": "string",
+          "description": "What to pay most attention to."
+        },
+        "post_to_github": {
+          "type": "boolean",
+          "description": "Also post the review on the pull request."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_nuwa_models",
+    "description": "The image, video and chat models available in N\u00fcwa, with the durations, aspect ratios, resolutions and reference files each accepts and the price in Tommies for each option (chat models show Tommies per 1K input/output tokens and the most a reply of each length can cost). Call this before create_nuwa_job to pick a model and valid settings; create_nuwa_job takes image and video models.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "image",
+            "video",
+            "chat"
+          ],
+          "description": "Only image, only video or only chat models."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "nuwa_balance",
+    "description": "How many Tommies (N\u00fcwa's credits for generating images and video) your owner has, and whether their account has N\u00fcwa access.",
+    "schema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_nuwa_jobs",
+    "description": "Your owner's recent N\u00fcwa image and video generations, newest first, with status, cost and the result link once finished.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "image",
+            "video"
+          ],
+          "description": "Only image or only video."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "queued",
+            "processing",
+            "completed",
+            "failed"
+          ],
+          "description": "Only generations in this state, e.g. completed or failed."
+        },
+        "limit": {
+          "type": "number",
+          "description": "How many (default 10, max 30)."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "check_nuwa_job",
+    "description": "Status and progress of one of your owner's N\u00fcwa generations by job id, and the image or video link once it's done. Video takes minutes: check back every 20\u201330 seconds rather than waiting.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "job_id": {
+          "type": "string",
+          "description": "The id create_nuwa_job returned (cosj_\u2026)."
+        }
+      },
+      "required": [
+        "job_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "create_nuwa_job",
+    "description": "Generate an image or a video with N\u00fcwa. This spends your owner's Tommies, so it works in two steps: 1) Call it without confirmation_token. Nothing is charged: it checks the settings and returns the price in Tommies, the balance and a confirmation_token. 2) Show the price to the user and ask them. Only after the user explicitly says yes, call it again with exactly the same arguments plus confirmation_token. Never confirm on the user's behalf. It returns a job id right away; generation runs in the background, so follow it with check_nuwa_job. Get valid model ids and options from list_nuwa_models.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "model": {
+          "type": "string",
+          "description": "Model id from list_nuwa_models."
+        },
+        "prompt": {
+          "type": "string",
+          "description": "What to create, in detail. Mention saved assets as @name to attach them and say where each goes, e.g. \"@maya sits at the window of @cafe, holding @mug\"."
+        },
+        "aspect_ratio": {
+          "type": "string",
+          "description": "One of the model's aspect ratios, e.g. 16:9, 9:16 or 1:1."
+        },
+        "duration": {
+          "type": "number",
+          "description": "Video only: length in seconds, one of the model's durations."
+        },
+        "resolution": {
+          "type": "string",
+          "description": "Image only: one of the model's resolutions, e.g. 1k, 2k or 4k."
+        },
+        "references": {
+          "type": "array",
+          "maxItems": 50,
+          "description": "Optional extra reference files as public https links, within the model's limits per kind. Refer to them in the prompt as @Image1, @Video1, @Audio1 in list order per kind, or as @name when you give one a name. Saved assets don't need to be listed here: mentioning one as @name in the prompt attaches it.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "image",
+                  "video",
+                  "audio"
+                ]
+              },
+              "name": {
+                "type": "string",
+                "description": "Optional @tag name for this reference, e.g. the asset's name from list_nuwa_assets: one word, letters, numbers, _ or -."
+              }
+            },
+            "required": [
+              "url",
+              "kind"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "confirmation_token": {
+          "type": "string",
+          "description": "From the quote step. Only send it after the user explicitly approved the price."
+        }
+      },
+      "required": [
+        "model",
+        "prompt",
+        "aspect_ratio"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "optimize_nuwa_prompt",
+    "description": "Rewrite a rough image or video prompt into a detailed one tuned for the chosen model and settings. It costs a few of your owner's Tommies, so it works in two steps like create_nuwa_job: 1) Call it without confirmation_token. Nothing is charged: it returns the most it can cost, the balance and a confirmation_token. 2) Show the price to the user. Only after the user explicitly says yes, call it again with exactly the same arguments plus confirmation_token. Never confirm on the user's behalf. It returns the improved prompt (unused budget is refunded). Show it to the user before generating with it.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "image",
+            "video"
+          ],
+          "description": "Whether the prompt is for an image or a video."
+        },
+        "prompt": {
+          "type": "string",
+          "description": "The prompt to improve (up to 4,000 characters). Reference tags like @Image1 or @name are kept."
+        },
+        "model": {
+          "type": "string",
+          "description": "Optional: the model id from list_nuwa_models it will be generated with."
+        },
+        "duration": {
+          "type": "number",
+          "description": "Optional, video: the planned length in seconds."
+        },
+        "aspect_ratio": {
+          "type": "string",
+          "description": "Optional: the planned aspect ratio, e.g. 16:9."
+        },
+        "references": {
+          "type": "array",
+          "maxItems": 50,
+          "description": "Optional: the references you'll attach, the same { url, kind } list create_nuwa_job takes. Only how many of each kind is used.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "image",
+                  "video",
+                  "audio"
+                ]
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "confirmation_token": {
+          "type": "string",
+          "description": "From the quote step. Only send it after the user explicitly approved the price."
+        }
+      },
+      "required": [
+        "kind",
+        "prompt"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "delete_nuwa_job",
+    "description": "Delete one of your owner's finished or failed N\u00fcwa generations and its stored file. It can't be undone and spent Tommies aren't returned. Only do this when the user asks for that generation to be deleted.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "job_id": {
+          "type": "string",
+          "description": "The generation's job id (cosj_\u2026), from create_nuwa_job or list_nuwa_jobs."
+        }
+      },
+      "required": [
+        "job_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_nuwa_assets",
+    "description": "Your owner's saved N\u00fcwa assets: named reference images, clips and audio, newest first. Mention one in a create_nuwa_job prompt as @name to attach it. add_nuwa_asset saves new ones.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "image",
+            "video",
+            "audio"
+          ],
+          "description": "Only images, only video clips or only audio."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "add_nuwa_asset",
+    "description": "Save a reference image, clip or audio file to your owner's N\u00fcwa assets under a name, so prompts can use it as @name. Give either url (a public https link to a JPEG, PNG or WebP image up to 20 MB, an MP4 or MOV clip up to 80 MB, or MP3/WAV/M4A/AAC/FLAC audio up to 30 MB) or job_id (one of your owner's finished generations, to reuse it as a reference). A file the user attached in this chat has no link you can pass: ask them to upload it in N\u00fcwa's Assets panel at /tools/nuwa, then use it by its name.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "Public https link to the file."
+        },
+        "job_id": {
+          "type": "string",
+          "description": "The generation's job id (cosj_\u2026), from create_nuwa_job or list_nuwa_jobs."
+        },
+        "name": {
+          "type": "string",
+          "description": "Optional @tag name, e.g. maya or red_car: one word of up to 32 letters, numbers, _ or -. Without it, a name is made from the file name."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "rename_nuwa_asset",
+    "description": "Rename one of your owner's saved N\u00fcwa assets. The name is the @tag used in prompts: one word of letters, numbers, _ or -.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "asset_id": {
+          "type": "string",
+          "description": "The asset's id (cosa_\u2026) from list_nuwa_assets."
+        },
+        "name": {
+          "type": "string",
+          "description": "The new name, e.g. maya or red_car."
+        }
+      },
+      "required": [
+        "asset_id",
+        "name"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "delete_nuwa_asset",
+    "description": "Delete one of your owner's saved N\u00fcwa assets and its stored file. It can't be undone. Only do this when the user asks for that asset to be deleted.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "asset_id": {
+          "type": "string",
+          "description": "The asset's id (cosa_\u2026) from list_nuwa_assets."
+        }
+      },
+      "required": [
+        "asset_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "nuwa_tommy_history",
+    "description": "Your owner's recent Tommy movements, newest first: purchases, charges for generations and prompt optimizing, and refunds.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "number",
+          "description": "How many entries (default 20, max 100)."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "game_maker_plan",
+    "description": "Write the full game design for a new playable game with Nonilion Game Maker, then price building it. Planning costs a few Tommies: call this first WITHOUT approved_plan_tommies to get the planning price (nothing is charged), tell the user, and only after they approve call it again with the same brief, genre, three_d and engine plus approved_plan_tommies. That returns the design (concept, pillars, loop, controls, rules, cast, progression, feel, sound, look, tuning, acceptance checks, files) and the exact build budget priced from it. Show both and only call game_maker_build after the user explicitly approves the build budget.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "brief": {
+          "type": "string",
+          "description": "What the game is: setting, characters, the core action, how you win or lose. Up to 6,000 characters."
+        },
+        "genre": {
+          "type": "string",
+          "enum": [
+            "open-world",
+            "action-rpg",
+            "indie-mobile",
+            "racing-sim",
+            "platformer",
+            "shooter",
+            "strategy",
+            "puzzle"
+          ],
+          "description": "Optional: open-world (Open World), action-rpg (Action RPG), indie-mobile (Indie / Mobile), racing-sim (Racing / Sim), platformer (Platformer), shooter (Shooter), strategy (Strategy), puzzle (Puzzle). Guessed from the brief when left out."
+        },
+        "three_d": {
+          "type": "boolean",
+          "description": "Optional: true for a 3D look (a bigger budget)."
+        },
+        "engine": {
+          "type": "string",
+          "enum": [
+            "godot",
+            "unity",
+            "unreal5"
+          ],
+          "description": "Optional: write a real engine project (Godot 4 GDScript, Unity C# or Unreal Engine 5 C++) that the user compiles on their PC, instead of a browser playable. Leave out for a browser playable."
+        },
+        "approved_plan_tommies": {
+          "type": "number",
+          "description": "The planning price the user approved (from a first call without it)."
+        }
+      },
+      "required": [
+        "brief"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "game_maker_build",
+    "description": "Build a game the user approved, from a plan made with game_maker_plan. This spends the user's Tommies: pass the plan's draft_id plus the budget's tommies and outputTokens as approved_tommies and approved_output_tokens, only after the user explicitly approved them. Never approve on the user's behalf. If the price went up it refuses and returns the new budget to approve. Calling it again for the same plan never charges twice. Building runs in the background: follow it with game_maker_status.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "draft_id": {
+          "type": "string",
+          "description": "The draft_id from game_maker_plan."
+        },
+        "approved_tommies": {
+          "type": "number",
+          "description": "The budget's tommies, after the user approved it."
+        },
+        "approved_output_tokens": {
+          "type": "number",
+          "description": "The budget's outputTokens, after the user approved it."
+        }
+      },
+      "required": [
+        "draft_id",
+        "approved_tommies",
+        "approved_output_tokens"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "game_maker_status",
+    "description": "The newest playable build of one of the user's games: running, ready or failed, with its version, lines of code, Tommies used, the error if it failed, and a link to play it. While it's running, check again every 20-30 seconds.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "game_id": {
+          "type": "string",
+          "description": "The game id (gm_\u2026) from game_maker_build, game_maker_save_game or game_maker_list."
+        }
+      },
+      "required": [
+        "game_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "game_maker_list",
+    "description": "The user's Nonilion Game Maker games, newest first (up to 30), with id, title, genre, last update and a link.",
+    "schema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "game_maker_kit",
+    "description": "Everything needed to write a game yourself on Nonilion's game kit: the kit's API, code rules, the quality bar and a complete example game.js. Free. Write ONE game.js that calls Nonilion.game({...}), then save it with game_maker_save_game.",
+    "schema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "game_maker_save_game",
+    "description": "Save a game.js you wrote with game_maker_kit as a new game in the user's Nonilion Game Maker, free (no Tommies). The code is checked first and refused with the exact problem if it breaks the kit's rules; nothing is fixed for you. Returns the game id, version and a link to play it.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The game's title (up to 80 characters)."
+        },
+        "brief": {
+          "type": "string",
+          "description": "What the game is: setting, characters, the core action, how you win or lose. Up to 6,000 characters."
+        },
+        "code": {
+          "type": "string",
+          "description": "The whole game.js, calling Nonilion.game({...}) once. Under 300 KB."
+        },
+        "genre": {
+          "type": "string",
+          "enum": [
+            "open-world",
+            "action-rpg",
+            "indie-mobile",
+            "racing-sim",
+            "platformer",
+            "shooter",
+            "strategy",
+            "puzzle"
+          ],
+          "description": "Optional: open-world, action-rpg, indie-mobile, racing-sim, platformer, shooter, strategy, puzzle. Defaults to indie-mobile."
+        }
+      },
+      "required": [
+        "title",
+        "brief",
+        "code"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "create_live_feed",
+    "description": "Create a Nonilion live data feed: office agents publish data to it and web apps (like a dashboard Nonidex builds) read it live and send messages back. Returns its id and browser-safe keys.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string",
+          "description": "What data it carries."
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_live_feeds",
+    "description": "Your owner's live data feeds (including the ones agent teams publish to automatically).",
+    "schema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "publish_live_data",
+    "description": "Send data to a live feed for the apps watching it. `data` is one event (e.g. a trade, a reading, a status change); `state` sets the feed's latest values by key (e.g. {\"equity\": 10432, \"open_orders\": 3}) that dashboards show directly. Send either or both.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "feed": {
+          "type": "string",
+          "description": "Feed name or id."
+        },
+        "topic": {
+          "type": "string",
+          "description": "What kind of event, e.g. trade, alert, metric."
+        },
+        "data": {
+          "description": "Any JSON value."
+        },
+        "state": {
+          "type": "object",
+          "description": "Latest values by key.",
+          "additionalProperties": true
+        }
+      },
+      "required": [
+        "feed"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "read_live_feed",
+    "description": "Read a live feed: messages apps sent to the office (from: apps, the default), what agents published (from: agents), or both; plus the latest state. Pass `after` (the last event id you saw) to get only new ones.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "feed": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string",
+          "enum": [
+            "apps",
+            "agents",
+            "all"
+          ]
+        },
+        "after": {
+          "type": "string"
+        },
+        "limit": {
+          "type": "number"
+        },
+        "include_state": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "feed"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "live_feed_connection",
+    "description": "The endpoints and keys an app needs to use a live feed (read key and send key are browser-safe). include_publish_key adds the server-only publish key for an outside server to publish with; never put it in browser code.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "feed": {
+          "type": "string"
+        },
+        "include_publish_key": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "feed"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "search_web",
+    "description": "Search the web for information, leads, market data, competitor analysis, or any research. Returns search results. Use this for lead generation research, market research, competitive analysis, or finding any external information.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "Search query string."
+        },
+        "num_results": {
+          "type": "number",
+          "description": "Number of results to return. Defaults to 5."
+        }
+      },
+      "required": [
+        "query"
+      ]
+    }
+  },
+  {
+    "name": "fetch_url",
+    "description": "Fetch and extract content from a URL. Uses Firecrawl via OpenClaw gateway for high-quality extraction, or falls back to direct HTTP fetch. Use this to scrape web pages, read articles/blogs, check website status, or gather data from any URL.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "The URL to fetch."
+        },
+        "extract_text": {
+          "type": "boolean",
+          "description": "If true, strip HTML tags and return only text content. Defaults to true."
+        }
+      },
+      "required": [
+        "url"
+      ]
+    }
+  },
+  {
+    "name": "get_date_context",
+    "description": "Get the exact current date, time, and year. Use this at the start of any research task to ensure all web searches include the correct current year and your data is never stale.",
+    "schema": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    }
+  },
+  {
+    "name": "get_team_tasks",
+    "description": "Get the current task board \u2014 all active, in-progress, and recent tasks for agents in this room. Use this to check status, find blockers, or understand what the team is working on.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "status_filter": {
+          "type": "string",
+          "description": "Optional status filter: 'TODO', 'IN_PROGRESS', 'COMPLETED', 'WAITING_FOR_INPUT', or 'all'. Defaults to 'all'."
+        },
+        "limit": {
+          "type": "number",
+          "description": "Max number of tasks to return. Defaults to 20."
+        }
+      },
+      "required": []
+    }
+  },
+  {
+    "name": "update_task_progress",
+    "description": "Update the progress or status of a task. Use this to report progress, mark tasks complete, or change task status.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "task_id": {
+          "type": "string",
+          "description": "The task ID to update."
+        },
+        "status": {
+          "type": "string",
+          "description": "New status: 'TODO', 'IN_PROGRESS', 'COMPLETED', 'WAITING_FOR_INPUT'."
+        },
+        "progress": {
+          "type": "number",
+          "description": "Progress percentage (0-100)."
+        },
+        "note": {
+          "type": "string",
+          "description": "Optional progress note or update message."
+        }
+      },
+      "required": [
+        "task_id"
+      ]
+    }
+  },
+  {
+    "name": "message_teammate",
+    "description": "Send a direct message to a teammate agent in the room. Use this for coordination, asking questions, sharing updates, or requesting information from other agents.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "teammate_role": {
+          "type": "string",
+          "description": "The role label of the teammate to message (e.g., 'Brand Writer', 'Engineering Manager')."
+        },
+        "message": {
+          "type": "string",
+          "description": "The message to send to the teammate."
+        }
+      },
+      "required": [
+        "teammate_role",
+        "message"
+      ]
+    }
+  },
+  {
+    "name": "broadcast_update",
+    "description": "Post a real-time status update visible in the room feed. Use this to keep the user and teammates informed of progress milestones: 'Starting competitor research', 'Campaign plan ready, delegating to Brand Writer', 'Email sequence sent to 3 recipients', etc.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "description": "Short status label: 'IN_PROGRESS', 'COMPLETED', 'BLOCKED', or 'WAITING'."
+        },
+        "message": {
+          "type": "string",
+          "description": "The update message to broadcast. Be specific: what just happened, what's next."
+        },
+        "progress_pct": {
+          "type": "number",
+          "description": "Optional progress percentage (0-100) for the overall task."
+        }
+      },
+      "required": [
+        "status",
+        "message"
+      ]
+    }
+  }
+]
