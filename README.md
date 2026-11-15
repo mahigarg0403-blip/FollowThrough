@@ -12,10 +12,11 @@ Built by **Team PistaShew** (Mahi Garg, Bhoomi Shree, Priyal Modi) for **InnoVor
 
 ## 🔗 Quick Links
 
-* **Live Deployment:** 'https://followthrough-sb1e.onrender.com` / 'https://www.nonilion.com/room/MobileRoom1794553247470'
+* **Live Deployment:** 'https://www.nonilion.com/room/MobileRoom1794553247470'
 
 
-* **Demo Video:** https://drive.google.com/file/d/16r0_7yVJCGo_H719kjfCjvUhdHUdWMHu/view?usp=sharing
+* **Demo Video:** https://drive.google.com/file/d/1TBUOBfNwfLYQ0NVdrI4AzUJJ6ZdDM4ja/view?usp=sharing /
+https://drive.google.com/file/d/16r0_7yVJCGo_H719kjfCjvUhdHUdWMHu/view?usp=sharing*
 
 
 
@@ -54,15 +55,7 @@ Built by **Team PistaShew** (Mahi Garg, Bhoomi Shree, Priyal Modi) for **InnoVor
 
 5. **Chase:** DMs task owners when items are due (with automatic room fallback if a member is unreachable), tracks `"done"`, `"snooze"`, and `"blocked"` replies, escalates after repeated nudges, and posts live progress updates + updated workload charts to the channel.
 
-
-
----
-
-## 📸 Preview
-
-*(Replace `docs/screenshot.png` with a screenshot of FollowThrough extracting tasks, posting the workload chart, and chasing owners in Nonilion)*
-
----
+----
 
 ## 🏗️ Architecture & Project Structure
 
